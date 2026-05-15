@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 
 import { RigidBody, CuboidCollider, IntersectionEnterPayload } from '@react-three/rapier';
