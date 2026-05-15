@@ -1,9 +1,17 @@
 'use client';
 
 import { useGameStore } from '@/lib/store';
+import { useEffect, useState } from 'react';
 
 export default function HUD() {
   const { gameState, players, currentPlayerIndex, brandingName, selectedGoalkeeper } = useGameStore();
+  const [camStatus, setCamStatus] = useState('SEARCHING');
+
+  useEffect(() => {
+    const handleStatus = (e: CustomEvent) => setCamStatus(e.detail.status);
+    window.addEventListener('camera-status', handleStatus as EventListener);
+    return () => window.removeEventListener('camera-status', handleStatus as EventListener);
+  }, []);
   const currentPlayer = players[currentPlayerIndex];
   const gkName = selectedGoalkeeper === 'DIBU' ? '🧤 El Dibu Martínez' : '🧤 Manuel Neuer';
 
@@ -61,9 +69,9 @@ export default function HUD() {
       {/* ── BOTTOM STATUS BAR ── */}
       <div className="flex justify-between items-end">
         <div className="glass px-4 py-2 rounded-xl flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <div className={`w-2 h-2 rounded-full ${camStatus === 'CONNECTED' ? 'bg-emerald-500 animate-pulse' : camStatus === 'SEARCHING' ? 'bg-yellow-500 animate-spin' : 'bg-red-500'}`} />
           <span className="text-[10px] font-mono text-white/50 tracking-wider uppercase">
-            Sistema activo
+            Cámara: {camStatus}
           </span>
         </div>
 

@@ -21,6 +21,10 @@ const PenaltyArena = dynamic(() => import('@/components/game/PenaltyArena'), {
   ),
 });
 
+const CameraTracker = dynamic(() => import('@/components/tracking/CameraTracker'), {
+  ssr: false,
+});
+
 export default function Home() {
   const { gameState } = useGameStore();
 
@@ -28,6 +32,9 @@ export default function Home() {
     <main className="relative w-full h-screen overflow-hidden bg-[#050505]">
       {/* 3D Scene — always mounted */}
       <PenaltyArena />
+
+      {/* Hidden Client-Side Camera Tracker */}
+      <CameraTracker />
 
       {/* HUD overlay — score, branding, status */}
       <HUD />
