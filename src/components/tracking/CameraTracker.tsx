@@ -204,7 +204,7 @@ export default function CameraTracker() {
       />
       {isDebug && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 border-4 border-[#00f2ff] bg-black/80 p-2 rounded-xl backdrop-blur-md">
-          <p className="text-white text-center font-bold mb-2 tracking-widest text-sm">AI DEBUG MODE</p>
+          <p className="text-white text-center font-bold mb-2 tracking-widest text-sm">MODO IA: CALIBRACIÓN</p>
           <canvas
             ref={canvasRef}
             width={640}

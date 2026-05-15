@@ -27,7 +27,7 @@ export default function Registration() {
 
         <div className="relative z-10 space-y-12">
           <div className="text-center">
-            <h2 className="text-sm font-black text-accent tracking-[0.4em] uppercase mb-2">Welcome to</h2>
+            <h2 className="text-sm font-black text-accent tracking-[0.4em] uppercase mb-2">Bienvenido a</h2>
             <h1 className="text-5xl font-black text-white text-glow tracking-tight uppercase">
               {brandingName}
             </h1>
@@ -36,12 +36,12 @@ export default function Registration() {
           <div className="space-y-8">
             {/* Name Input */}
             <div className="space-y-3">
-              <label className="text-xs font-bold text-white/40 uppercase tracking-widest ml-4">Player Name</label>
+              <label className="text-xs font-bold text-white/40 uppercase tracking-widest ml-4">Nombre del Jugador</label>
               <input 
                 type="text" 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="ENTER YOUR NAME"
+                placeholder="INGRESA TU NOMBRE"
                 className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-6 text-2xl font-bold text-white placeholder:text-white/10 focus:outline-none focus:border-accent/50 transition-all"
               />
             </div>
@@ -50,7 +50,7 @@ export default function Registration() {
             <div className="grid grid-cols-2 gap-6">
               {/* Goalkeeper Selection */}
               <div className="space-y-4">
-                <label className="text-xs font-bold text-white/40 uppercase tracking-widest ml-2">Choose Opponent</label>
+                <label className="text-xs font-bold text-white/40 uppercase tracking-widest ml-2">Elige tu Oponente</label>
                 <div className="flex flex-col gap-3">
                   <button 
                     onClick={() => setGk('DIBU')}
@@ -77,7 +77,7 @@ export default function Registration() {
 
               {/* Mode Selection */}
               <div className="space-y-4">
-                <label className="text-xs font-bold text-white/40 uppercase tracking-widest ml-2">Game Mode</label>
+                <label className="text-xs font-bold text-white/40 uppercase tracking-widest ml-2">Modo de Juego</label>
                 <div className="flex flex-col gap-3">
                   <button 
                     onClick={() => setMode('individual')}
@@ -97,7 +97,7 @@ export default function Registration() {
                     )}
                   >
                     <Users className="w-5 h-5" />
-                    <span className="font-bold uppercase text-sm">Tournament</span>
+                    <span className="font-bold uppercase text-sm">Torneo</span>
                   </button>
                 </div>
               </div>
@@ -109,7 +109,7 @@ export default function Registration() {
             disabled={!name}
             className="w-full bg-white text-black font-black text-xl py-6 rounded-2xl hover:bg-accent hover:text-black transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(255,255,255,0.2)]"
           >
-            START COMPETITION
+            INICIAR COMPETENCIA
           </button>
         </div>
       </div>

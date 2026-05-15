@@ -26,7 +26,7 @@ export default function HUD() {
         >
           <div className="flex flex-col">
             <span className="text-[10px] font-bold text-accent/60 tracking-[0.25em] uppercase">
-              Powered by
+              Presentado por
             </span>
             <span
               className="text-lg font-black tracking-wider text-white uppercase"
@@ -35,7 +35,7 @@ export default function HUD() {
               {brandingName}
             </span>
             <span className="text-[9px] text-white/30 tracking-[0.2em] uppercase">
-              World Cup Edition 2026
+              Edición Mundial 2026
             </span>
           </div>
         </div>
@@ -44,7 +44,7 @@ export default function HUD() {
         <div className="flex flex-col items-end gap-2">
           {/* Goalkeeper indicator */}
           <div className="glass px-4 py-2 rounded-xl">
-            <p className="text-[10px] text-white/40 uppercase tracking-widest">Opponent</p>
+            <p className="text-[10px] text-white/40 uppercase tracking-widest">Oponente</p>
             <p className="text-sm font-bold text-white">{gkName}</p>
           </div>
 
