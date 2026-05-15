@@ -46,11 +46,12 @@ export default function Registration() {
 
         <div className="relative z-10 space-y-10">
           <div className="text-center">
-            <h2 className="text-[10px] font-black text-accent tracking-[0.5em] uppercase mb-2">Bienvenido a</h2>
+            <h2 className="text-[10px] font-black text-accent tracking-[0.5em] uppercase mb-2">Penalty</h2>
             <h1 className="text-4xl md:text-5xl font-black text-white text-glow tracking-tight uppercase">
               {brandingName}
             </h1>
           </div>
+
 
           <div className="space-y-6">
             {/* Mode Selection */}

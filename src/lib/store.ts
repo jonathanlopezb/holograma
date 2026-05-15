@@ -40,7 +40,7 @@ export const useGameStore = create<GameStore>((set) => ({
   currentPlayerIndex: 0,
   selectedGoalkeeper: 'DIBU',
   maxAttempts: 3,
-  brandingName: 'Holograma Arena',
+  brandingName: 'Transelo',
   strikerScore: 0,
   goalkeeperScore: 0,
 
