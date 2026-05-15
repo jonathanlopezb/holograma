@@ -2,10 +2,9 @@
 'use client';
 
 import { useRef, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { RigidBody, BallCollider } from '@react-three/rapier';
+import { useGLTF } from '@react-three/drei';
+import { RigidBody } from '@react-three/rapier';
 import { useGameStore } from '@/lib/store';
-import * as THREE from 'three';
 
 export default function Ball() {
   const ballRef = useRef<any>(null);
@@ -33,23 +32,33 @@ export default function Ball() {
   }, []);
 
   // Load realistic ball model
-  // Place 'ball.glb' in public/models/
   let ballModel;
   try {
     ballModel = useGLTF('/models/ball.glb');
   } catch (e) {
     ballModel = null;
   }
-  const { scene } = ballModel || { scene: null };
+  const scene = ballModel?.scene;
 
   return (
-            0.1,
-          ]}
-        >
-          <circleGeometry args={[0.06, 5]} />
-          <meshStandardMaterial color="#111111" />
+    <RigidBody
+      ref={ballRef}
+      colliders="ball"
+      position={[0, 0.22, 5]}
+      restitution={0.8}
+      friction={0.5}
+      name="ball"
+    >
+      {scene ? (
+        <primitive object={scene} scale={0.22} />
+      ) : (
+        <mesh castShadow receiveShadow>
+          <sphereGeometry args={[0.22, 32, 32]} />
+          <meshStandardMaterial color="#ffffff" roughness={0.1} />
         </mesh>
-      ))}
+      )}
     </RigidBody>
   );
 }
+
+try { useGLTF.preload('/models/ball.glb'); } catch (e) {}

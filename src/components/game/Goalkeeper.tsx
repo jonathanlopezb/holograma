@@ -3,6 +3,8 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useFrame } from '@react-three/fiber';
+import { RigidBody, CuboidCollider } from '@react-three/rapier';
+import { useGLTF, useAnimations } from '@react-three/drei';
 import { useGameStore } from '@/lib/store';
 import * as THREE from 'three';
 
@@ -13,26 +15,45 @@ interface GoalkeeperProps {
   onGoal?: () => void;
 }
 
-// Goalkeeper state machine states
 type GKState = 'idle' | 'taunt' | 'dive_left' | 'dive_right' | 'dive_center' | 'celebrate' | 'frustrated';
 
 export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
   const { selectedGoalkeeper, gameState } = useGameStore();
   const bodyRef = useRef<THREE.Group>(null);
-  const leftArmRef = useRef<THREE.Mesh>(null);
-  const rightArmRef = useRef<THREE.Mesh>(null);
-
+  const rigidbody = useRef<any>(null);
   const [gkState, setGkState] = useState<GKState>('idle');
-  const [diveTarget, setDiveTarget] = useState<THREE.Vector3>(new THREE.Vector3(0, 1, -4.8));
 
-  // Colors per goalkeeper
+  // Colors per goalkeeper (fallback)
   const colors = {
     DIBU: { jersey: '#4CAF50', shorts: '#fff', skin: '#d4a076' },
     NEUER: { jersey: '#dc2626', shorts: '#000', skin: '#f0c090' },
   };
   const c = colors[selectedGoalkeeper];
 
-  // Expose dive trigger for external use via event
+  // Try to load realistic model
+  let goalkeeperModel;
+  try {
+    goalkeeperModel = useGLTF('/models/goalkeeper.glb');
+  } catch (e) {
+    goalkeeperModel = null;
+  }
+  const { scene, animations } = goalkeeperModel || { scene: null, animations: [] };
+  const { actions } = useAnimations(animations, bodyRef);
+
+  useEffect(() => {
+    if (!actions) return;
+    if (gkState === 'idle') {
+      actions.idle?.reset().fadeIn(0.5).play();
+    } else if (gkState.startsWith('dive_')) {
+      actions.idle?.fadeOut(0.2);
+      const actionName = gkState;
+      if (actions[actionName]) {
+        actions[actionName].reset().setLoop(THREE.LoopOnce, 1).play();
+        actions[actionName].clampWhenFinished = true;
+      }
+    }
+  }, [gkState, actions]);
+
   useEffect(() => {
     const handleDive = (e: CustomEvent<{ direction: DiveDirection }>) => {
       const { direction } = e.detail;
@@ -42,7 +63,6 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
         center: 'dive_center',
       };
       setGkState(stateMap[direction]);
-      // Reset to idle after animation
       setTimeout(() => setGkState('idle'), 2000);
     };
     window.addEventListener('goalkeeper-dive', handleDive as EventListener);
@@ -54,113 +74,45 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
     const t = state.clock.getElapsedTime();
     const body = bodyRef.current;
 
-    switch (gkState) {
-      case 'idle': {
-        // Gentle sway side to side — Dibu more pronounced, Neuer minimal
-        const swayAmp = selectedGoalkeeper === 'DIBU' ? 0.7 : 0.25;
-        const swaySpeed = selectedGoalkeeper === 'DIBU' ? 1.8 : 0.9;
-        body.position.x = Math.sin(t * swaySpeed) * swayAmp;
-        body.position.y = 1;
-        body.position.z = -4.8;
-        // Bob up/down slightly
-        body.position.y = 1 + Math.abs(Math.sin(t * swaySpeed * 2)) * 0.05;
-        // Arm wave for Dibu
-        if (leftArmRef.current && rightArmRef.current) {
-          leftArmRef.current.rotation.z = selectedGoalkeeper === 'DIBU'
-            ? Math.sin(t * 3) * 0.4 + 0.3
-            : 0.1;
-          rightArmRef.current.rotation.z = selectedGoalkeeper === 'DIBU'
-            ? -(Math.sin(t * 3 + 1) * 0.4 + 0.3)
-            : -0.1;
-        }
-        break;
-      }
-      case 'taunt': {
-        // Dibu points at the player, Neuer stares steady
-        body.position.x = 0;
-        body.position.y = 1;
-        body.position.z = -4.8;
-        if (rightArmRef.current) {
-          rightArmRef.current.rotation.x = selectedGoalkeeper === 'DIBU'
-            ? -Math.PI / 3 + Math.sin(t * 5) * 0.05  // Pointing forward
-            : 0;
-          rightArmRef.current.rotation.z = selectedGoalkeeper === 'DIBU' ? 0 : -0.1;
-        }
-        break;
-      }
-      case 'dive_left': {
+    // Movement logic for fallback mannequin
+    if (!scene) {
+      if (gkState === 'idle') {
+        body.position.x = Math.sin(t * 1.8) * 0.7;
+        body.position.y = 1 + Math.abs(Math.sin(t * 3.6)) * 0.05;
+      } else if (gkState === 'dive_left') {
         body.position.x = THREE.MathUtils.lerp(body.position.x, -2.5, 0.18);
-        body.position.y = THREE.MathUtils.lerp(body.position.y, 0.5, 0.12);
         body.rotation.z = THREE.MathUtils.lerp(body.rotation.z, Math.PI / 2.2, 0.15);
-        if (leftArmRef.current) leftArmRef.current.rotation.z = Math.PI / 2;
-        if (rightArmRef.current) rightArmRef.current.rotation.z = Math.PI / 3;
-        break;
-      }
-      case 'dive_right': {
+      } else if (gkState === 'dive_right') {
         body.position.x = THREE.MathUtils.lerp(body.position.x, 2.5, 0.18);
-        body.position.y = THREE.MathUtils.lerp(body.position.y, 0.5, 0.12);
         body.rotation.z = THREE.MathUtils.lerp(body.rotation.z, -Math.PI / 2.2, 0.15);
-        if (leftArmRef.current) leftArmRef.current.rotation.z = -Math.PI / 3;
-        if (rightArmRef.current) rightArmRef.current.rotation.z = -Math.PI / 2;
-        break;
-      }
-      case 'dive_center': {
-        // Jump straight up
-        body.position.x = THREE.MathUtils.lerp(body.position.x, 0, 0.1);
-        body.position.y = THREE.MathUtils.lerp(body.position.y, 2.2, 0.12);
-        body.rotation.z = THREE.MathUtils.lerp(body.rotation.z, 0, 0.1);
-        if (leftArmRef.current) leftArmRef.current.rotation.z = Math.PI / 3;
-        if (rightArmRef.current) rightArmRef.current.rotation.z = -Math.PI / 3;
-        break;
-      }
-      case 'celebrate': {
-        body.position.y = 1 + Math.abs(Math.sin(t * 6)) * 0.3; // Jump celebrate
-        body.rotation.z = Math.sin(t * 8) * 0.1;
-        break;
-      }
-      case 'frustrated': {
-        body.rotation.z = Math.sin(t * 10) * 0.05; // Slight shake
-        break;
       }
     }
   });
 
+  const onContact = () => {
+    if (onSave) onSave();
+  };
+
   return (
-    <group ref={bodyRef} position={[0, 1, -4.8]}>
-      {/* Torso */}
-      <mesh castShadow>
-        <capsuleGeometry args={[0.35, 1.0, 8, 16]} />
-
-      {/* Left Arm */}
-      <mesh ref={leftArmRef} position={[-0.5, 0.3, 0]} rotation={[0, 0, 0.3]} castShadow>
-        <capsuleGeometry args={[0.1, 0.5, 4, 8]} />
-        <meshStandardMaterial color={c.jersey} />
-      </mesh>
-
-      {/* Right Arm */}
-      <mesh ref={rightArmRef} position={[0.5, 0.3, 0]} rotation={[0, 0, -0.3]} castShadow>
-        <capsuleGeometry args={[0.1, 0.5, 4, 8]} />
-        <meshStandardMaterial color={c.jersey} />
-      </mesh>
-
-      {/* Shorts */}
-      <mesh position={[0, -0.4, 0]} castShadow>
-        <cylinderGeometry args={[0.32, 0.28, 0.4, 8]} />
-        <meshStandardMaterial color={c.shorts} />
-      </mesh>
-
-      {/* Legs */}
-      <mesh position={[-0.15, -0.85, 0]} castShadow>
-        <capsuleGeometry args={[0.1, 0.5, 4, 8]} />
-        <meshStandardMaterial color={c.skin} />
-      </mesh>
-      <mesh position={[0.15, -0.85, 0]} castShadow>
-        <capsuleGeometry args={[0.1, 0.5, 4, 8]} />
-        <meshStandardMaterial color={c.skin} />
-      </mesh>
-
-      {/* Jersey Number */}
-      {/* Dibu wears #7 (Dibu), Neuer #1 */}
-    </group>
+    <RigidBody
+      ref={rigidbody}
+      type="kinematicPosition"
+      colliders={false}
+      onIntersectionEnter={onContact}
+    >
+      <group ref={bodyRef}>
+        {scene ? (
+          <primitive object={scene} scale={1.8} position={[0, -1, 0]} rotation={[0, Math.PI, 0]} />
+        ) : (
+          <mesh castShadow>
+            <capsuleGeometry args={[0.4, 1.2, 4, 16]} />
+            <meshStandardMaterial color={c.jersey} metalness={0.8} roughness={0.2} />
+          </mesh>
+        )}
+      </group>
+      <CuboidCollider args={[0.6, 1.2, 0.6]} />
+    </RigidBody>
   );
 }
+
+try { useGLTF.preload('/models/goalkeeper.glb'); } catch (e) {}
