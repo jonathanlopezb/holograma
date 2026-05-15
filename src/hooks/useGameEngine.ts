@@ -19,9 +19,11 @@ interface ShotParams {
 export function useGameEngine() {
   const {
     gameState, setGameState,
-    currentPlayerIndex,
-    players, addGoal, addAttempt,
+    gameMode,
+    currentPlayerIndex, setCurrentPlayerIndex,
+    players, addGoal, addAttempt, addGoalkeeperSave,
     maxAttempts,
+    strikerScore, goalkeeperScore
   } = useGameStore();
 
   const lastShotResult = useRef<'goal' | 'save' | null>(null);
@@ -30,7 +32,6 @@ export function useGameEngine() {
     if (gameState !== 'PLAYING') return;
 
     // --- Goalkeeper random decision ---
-    // 65% chance he dives the wrong way or stays center (goal), 35% correct save
     const directions: Direction[] = ['left', 'right', 'center'];
     const gkChoice = directions[Math.floor(Math.random() * directions.length)];
 
@@ -48,6 +49,7 @@ export function useGameEngine() {
       setGameState('GOAL');
       window.dispatchEvent(new CustomEvent('gk-state', { detail: { state: 'frustrated' } }));
     } else {
+      addGoalkeeperSave();
       setGameState('SAVE');
       window.dispatchEvent(new CustomEvent('gk-state', { detail: { state: 'celebrate' } }));
     }
@@ -56,14 +58,32 @@ export function useGameEngine() {
 
     // Auto-advance after 2.5 seconds
     setTimeout(() => {
-      const p = useGameStore.getState().players[currentPlayerIndex];
-      if (p && p.attempts >= useGameStore.getState().maxAttempts) {
-        setGameState('TOURNAMENT_RESULTS');
+      const state = useGameStore.getState();
+      
+      if (state.gameMode === 'INDIVIDUAL') {
+        const totalAttempts = state.strikerScore + state.goalkeeperScore;
+        if (totalAttempts >= 3) {
+          setGameState('TOURNAMENT_RESULTS');
+        } else {
+          setGameState('PLAYING');
+        }
       } else {
-        setGameState('PLAYING');
+        // Team mode logic: Each player has exactly 1 attempt
+        const totalPlayers = state.players.length;
+        const nextPlayerIndex = state.currentPlayerIndex + 1;
+        
+        // If the current player was the last one, end tournament
+        if (nextPlayerIndex >= totalPlayers) {
+          setGameState('TOURNAMENT_RESULTS');
+        } else {
+          setCurrentPlayerIndex(nextPlayerIndex);
+          setGameState('PLAYING');
+        }
       }
+
     }, 2500);
-  }, [gameState, currentPlayerIndex, addGoal, addAttempt, setGameState]);
+  }, [gameState, gameMode, currentPlayerIndex, addGoal, addAttempt, addGoalkeeperSave, setGameState, setCurrentPlayerIndex]);
+
 
   return { shoot };
 }
