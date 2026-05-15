@@ -2,6 +2,7 @@
 
 // @ts-nocheck
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { X } from 'lucide-react';
 import * as tf from '@tensorflow/tfjs';
 import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { useGameEngine, Direction } from '@/hooks/useGameEngine';
@@ -205,7 +206,15 @@ export default function CameraTracker() {
       />
       {isDebug && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 border-4 border-[#00f2ff] bg-black/80 p-2 rounded-xl backdrop-blur-md">
-          <p className="text-white text-center font-bold mb-2 tracking-widest text-sm">MODO IA: CALIBRACIÓN</p>
+          <div className="flex justify-between items-center mb-2 px-2">
+            <p className="text-white font-bold tracking-widest text-sm uppercase">MODO IA: CALIBRACIÓN</p>
+            <button 
+              onClick={() => setIsDebug(false)}
+              className="p-1 hover:bg-white/10 rounded-lg text-white/50 hover:text-white transition-all"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
           <canvas
             ref={canvasRef}
             width={640}
