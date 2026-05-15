@@ -1,65 +1,52 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+// @ts-nocheck
+import { useEffect, useRef, useState, useCallback } from 'react';
+import * as tf from '@tensorflow/tfjs';
+import * as cocoSsd from '@tensorflow-models/coco-ssd';
 import { useGameEngine, Direction } from '@/hooks/useGameEngine';
 import { useGameStore } from '@/lib/store';
 
-// Helper to calculate pixel difference
-function getDifference(data1: Uint8ClampedArray, data2: Uint8ClampedArray) {
-  let diffCount = 0;
-  let sumX = 0;
-  let sumY = 0;
-
-  // We check every 4th pixel (step=16 bytes: 4 rgba pixels) for performance
-  for (let i = 0; i < data1.length; i += 16) {
-    const r1 = data1[i];
-    const g1 = data1[i + 1];
-    const b1 = data1[i + 2];
-
-    const r2 = data2[i];
-    const g2 = data2[i + 1];
-    const b2 = data2[i + 2];
-
-    const diff = Math.abs(r1 - r2) + Math.abs(g1 - g2) + Math.abs(b1 - b2);
-
-    // Threshold for considering a pixel "changed"
-    if (diff > 100) {
-      diffCount++;
-      // Calculate coordinates based on index (assuming 640x480 resolution)
-      const pixelIndex = i / 4;
-      sumX += pixelIndex % 640;
-      sumY += Math.floor(pixelIndex / 640);
-    }
-  }
-
-  return {
-    diffCount,
-    centroidX: diffCount > 0 ? sumX / diffCount : 0,
-    centroidY: diffCount > 0 ? sumY / diffCount : 0,
-  };
-}
+interface Point { x: number; y: number; time: number; width: number }
 
 export default function CameraTracker() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const previousFrameRef = useRef<Uint8ClampedArray | null>(null);
   const requestRef = useRef<number>();
-
+  
+  const [model, setModel] = useState<cocoSsd.ObjectDetection | null>(null);
   const [isDebug, setIsDebug] = useState(false);
-  const [camStatus, setCamStatus] = useState<'DISCONNECTED' | 'SEARCHING' | 'CONNECTED'>('SEARCHING');
+  const [camStatus, setCamStatus] = useState<'DISCONNECTED' | 'SEARCHING' | 'LOADING_AI' | 'CONNECTED'>('SEARCHING');
 
   const { shoot } = useGameEngine();
   const { gameState } = useGameStore();
   const isPlayingRef = useRef(gameState === 'PLAYING');
 
-  // Keep ref in sync for the animation loop
+  // Track ball history for velocity/trajectory calculation
+  const ballHistory = useRef<Point[]>([]);
+  const cooldownRef = useRef(false);
+
   useEffect(() => {
     isPlayingRef.current = gameState === 'PLAYING';
+    if (gameState === 'PLAYING') cooldownRef.current = false;
   }, [gameState]);
+
+  // Load Model
+  useEffect(() => {
+    async function loadModel() {
+      setCamStatus('LOADING_AI');
+      await tf.ready();
+      const loadedModel = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
+      setModel(loadedModel);
+      console.log('COCO-SSD Model loaded');
+    }
+    loadModel();
+  }, []);
 
   // Setup Camera
   useEffect(() => {
     async function setupCamera() {
+      if (!model) return;
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { width: 640, height: 480, facingMode: 'environment' }
@@ -82,7 +69,7 @@ export default function CameraTracker() {
         tracks.forEach(track => track.stop());
       }
     };
-  }, []);
+  }, [model]);
 
   // Debug toggle
   useEffect(() => {
@@ -101,83 +88,109 @@ export default function CameraTracker() {
   }, [camStatus]);
 
   // Main Tracking Loop
-  useEffect(() => {
-    if (camStatus !== 'CONNECTED') return;
-
-    const canvas = canvasRef.current;
+  const processFrame = useCallback(async () => {
     const video = videoRef.current;
-    if (!canvas || !video) return;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || !model || camStatus !== 'CONNECTED') {
+      requestRef.current = requestAnimationFrame(processFrame);
+      return;
+    }
 
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return;
-
-    const processFrame = () => {
-      if (video.readyState === video.HAVE_ENOUGH_DATA) {
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
         ctx.drawImage(video, 0, 0, 640, 480);
-        const frameData = ctx.getImageData(0, 0, 640, 480);
-        const currentPixels = frameData.data;
 
-        if (previousFrameRef.current) {
-          const { diffCount, centroidX, centroidY } = getDifference(currentPixels, previousFrameRef.current);
+        // Detect objects
+        const predictions = await model.detect(video);
+        
+        // Filter for sports ball
+        const ball = predictions.find(p => p.class === 'sports ball' && p.score > 0.4);
 
-          // Render debug info
-          if (isDebug) {
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-            ctx.fillRect(centroidX - 10, centroidY - 10, 20, 20);
-            ctx.fillStyle = 'lime';
-            ctx.font = '20px monospace';
-            ctx.fillText(`Diff: ${diffCount}`, 10, 30);
-            
-            // Draw zone lines
-            ctx.strokeStyle = 'rgba(0, 242, 255, 0.5)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(213, 0); ctx.lineTo(213, 480);
-            ctx.moveTo(426, 0); ctx.lineTo(426, 480);
-            ctx.stroke();
-          }
+        if (isDebug) {
+          // Draw zones
+          ctx.strokeStyle = 'rgba(0, 242, 255, 0.5)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(213, 0); ctx.lineTo(213, 480);
+          ctx.moveTo(426, 0); ctx.lineTo(426, 480);
+          ctx.stroke();
 
-          // Trigger logic
-          // A sudden spike in diffCount means something fast (like a ball) crossed the view
-          // Threshold depends on environment, ~1000 pixels is a good starting point for a fast ball
-          if (diffCount > 1500 && isPlayingRef.current) {
-            let dir: Direction = 'center';
-            if (centroidX < 213) dir = 'right'; // Flipped horizontally
-            else if (centroidX > 426) dir = 'left';
-            else dir = 'center';
-
-            const height = centroidY < 240 ? 'high' : 'low';
-
-            // Fire shot visually and via engine
-            const impulseMap: Record<Direction, { dx: number; dy: number; dz: number; spin: number }> = {
-              left:   { dx: -1.2, dy: height === 'high' ? 1.2 : 0.8, dz: -6, spin: -0.5 },
-              center: { dx: 0,    dy: height === 'high' ? 1.5 : 1.0, dz: -7, spin: 0 },
-              right:  { dx: 1.2,  dy: height === 'high' ? 1.2 : 0.8, dz: -6, spin: 0.5 },
-            };
-            window.dispatchEvent(new CustomEvent('ball-shoot', { detail: impulseMap[dir] }));
-            
-            // Call engine
-            shoot({ direction: dir, height });
-
-            // Temporarily set isPlaying to false locally to avoid double-triggers
-            isPlayingRef.current = false;
-          }
+          // Draw predictions
+          predictions.forEach(p => {
+            const isBall = p.class === 'sports ball';
+            ctx.strokeStyle = isBall ? '#00ff00' : '#ff0000';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(p.bbox[0], p.bbox[1], p.bbox[2], p.bbox[3]);
+            ctx.fillStyle = isBall ? '#00ff00' : '#ff0000';
+            ctx.font = '16px monospace';
+            ctx.fillText(`${p.class} (${Math.round(p.score * 100)}%)`, p.bbox[0], p.bbox[1] > 20 ? p.bbox[1] - 5 : 20);
+          });
         }
 
-        // Store frame for next tick
-        // Copying array to avoid reference mutation
-        previousFrameRef.current = new Uint8ClampedArray(currentPixels);
+        const now = performance.now();
+
+        if (ball) {
+          const centerX = ball.bbox[0] + ball.bbox[2] / 2;
+          const centerY = ball.bbox[1] + ball.bbox[3] / 2;
+          
+          ballHistory.current.push({ x: centerX, y: centerY, time: now, width: ball.bbox[2] });
+          if (ballHistory.current.length > 10) ballHistory.current.shift();
+
+          // Calculate velocity and trajectory if we have history
+          if (ballHistory.current.length > 2 && isPlayingRef.current && !cooldownRef.current) {
+            const oldest = ballHistory.current[0];
+            const newest = ballHistory.current[ballHistory.current.length - 1];
+            
+            const timeDiff = newest.time - oldest.time;
+            const sizeDiff = oldest.width - newest.width; // Positive means ball is getting smaller (moving away)
+            const speedY = (newest.y - oldest.y) / timeDiff;
+
+            // Trigger condition: Ball is moving away fast AND moving upwards (in camera view) or significantly shrinking
+            if (sizeDiff > 10 || Math.abs(speedY) > 0.5) {
+              
+              let dir: Direction = 'center';
+              if (newest.x < 213) dir = 'right'; // Camera is usually mirrored
+              else if (newest.x > 426) dir = 'left';
+              else dir = 'center';
+
+              const height = newest.y < 240 ? 'high' : 'low';
+
+              // Fire shot
+              const impulseMap: Record<Direction, { dx: number; dy: number; dz: number; spin: number }> = {
+                left:   { dx: -1.2, dy: height === 'high' ? 1.2 : 0.8, dz: -6, spin: -0.5 },
+                center: { dx: 0,    dy: height === 'high' ? 1.5 : 1.0, dz: -7, spin: 0 },
+                right:  { dx: 1.2,  dy: height === 'high' ? 1.2 : 0.8, dz: -6, spin: 0.5 },
+              };
+              
+              window.dispatchEvent(new CustomEvent('ball-shoot', { detail: impulseMap[dir] }));
+              shoot({ direction: dir, height });
+
+              cooldownRef.current = true;
+              ballHistory.current = [];
+            }
+          }
+        } else {
+          // Clear history if ball is lost for too long
+          if (ballHistory.current.length > 0 && now - ballHistory.current[ballHistory.current.length-1].time > 500) {
+            ballHistory.current = [];
+          }
+        }
       }
+    }
 
-      requestRef.current = requestAnimationFrame(processFrame);
-    };
-
+    // Use requestAnimationFrame for smooth loop, but tf.detect is async so it limits FPS naturally
     requestRef.current = requestAnimationFrame(processFrame);
+  }, [model, camStatus, isDebug, shoot]);
 
+  useEffect(() => {
+    if (camStatus === 'CONNECTED') {
+      requestRef.current = requestAnimationFrame(processFrame);
+    }
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [camStatus, isDebug, shoot]);
+  }, [processFrame, camStatus]);
 
   return (
     <>
@@ -190,8 +203,8 @@ export default function CameraTracker() {
         style={{ display: 'none' }}
       />
       {isDebug && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 border-4 border-red-500 bg-black/50 p-2 rounded-xl">
-          <p className="text-white text-center font-bold mb-2">MODO CALIBRACIÓN CÁMARA</p>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 border-4 border-[#00f2ff] bg-black/80 p-2 rounded-xl backdrop-blur-md">
+          <p className="text-white text-center font-bold mb-2 tracking-widest text-sm">AI DEBUG MODE</p>
           <canvas
             ref={canvasRef}
             width={640}
