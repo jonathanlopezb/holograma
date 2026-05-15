@@ -32,6 +32,7 @@ export default function Ball() {
   }, []);
 
   // Load realistic ball model
+  /* 
   let ballModel;
   try {
     ballModel = useGLTF('/models/ball.glb');
@@ -39,6 +40,9 @@ export default function Ball() {
     ballModel = null;
   }
   const scene = ballModel?.scene;
+  */
+  const scene = null;
+
 
   return (
     <RigidBody
@@ -68,4 +72,4 @@ export default function Ball() {
   );
 }
 
-try { useGLTF.preload('/models/ball.glb'); } catch (e) {}
+// try { useGLTF.preload('/models/ball.glb'); } catch (e) {}

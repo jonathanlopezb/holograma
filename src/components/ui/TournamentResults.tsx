@@ -31,7 +31,7 @@ export default function TournamentResults() {
           
           <div className="space-y-2">
             <p className="text-[10px] font-black text-accent uppercase tracking-[0.5em]">{brandingName}</p>
-            <h2 className="text-sm font-bold text-white/40 uppercase tracking-widest">Resultado Final</h2>
+            <h2 className="text-sm font-bold text-white/40 uppercase tracking-widest">Estadísticas Finales</h2>
           </div>
 
           {/* Winner Section */}
@@ -52,16 +52,17 @@ export default function TournamentResults() {
 
             <div className="space-y-1">
               <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter uppercase italic">
-                {isIndividual ? (isDraw ? '¡EMPATE!' : '¡GANADOR!') : (isTeamTie ? '¡EMPATE!' : '¡CAMPEÓN!')}
+                {isIndividual ? (isDraw ? '¡EMPATE!' : '¡VICTORIA!') : (isTeamTie ? '¡EMPATE!' : '¡CAMPEÓN!')}
               </h1>
               <p className="text-2xl md:text-3xl font-black text-yellow-400 uppercase tracking-tight">
                 {isIndividual 
-                  ? (isDraw ? 'Duelo muy parejo' : individualWinner) 
-                  : (isTeamTie ? 'Varios ganadores' : (teamWinner?.score === 0 ? 'Nadie anotó' : teamWinner?.name))
+                  ? (isDraw ? 'Duelo de Gigantes' : individualWinner) 
+                  : (isTeamTie ? 'Múltiples Goleadores' : (teamWinner?.score === 0 ? 'Sin Goles Anotados' : teamWinner?.name))
                 }
               </p>
             </div>
           </div>
+
 
 
           {/* Score Board */}

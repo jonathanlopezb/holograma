@@ -31,6 +31,7 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
   const c = colors[selectedGoalkeeper];
 
   // Try to load realistic model
+  /* 
   let goalkeeperModel;
   try {
     goalkeeperModel = useGLTF('/models/goalkeeper.glb');
@@ -38,6 +39,10 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
     goalkeeperModel = null;
   }
   const { scene, animations } = goalkeeperModel || { scene: null, animations: [] };
+  */
+  const scene = null;
+  const animations = [];
+
   const { actions } = useAnimations(animations, bodyRef);
 
   useEffect(() => {
@@ -115,4 +120,4 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
   );
 }
 
-try { useGLTF.preload('/models/goalkeeper.glb'); } catch (e) {}
+// try { useGLTF.preload('/models/goalkeeper.glb'); } catch (e) {}

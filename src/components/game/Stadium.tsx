@@ -4,6 +4,7 @@
 import { useGLTF } from '@react-three/drei';
 
 export default function Stadium() {
+  /* 
   let stadiumModel;
   try {
     stadiumModel = useGLTF('/models/stadium.glb');
@@ -11,6 +12,9 @@ export default function Stadium() {
     stadiumModel = null;
   }
   const scene = stadiumModel?.scene;
+  */
+  const scene = null;
+
 
   return (
     <group>
@@ -58,4 +62,4 @@ export default function Stadium() {
   );
 }
 
-try { useGLTF.preload('/models/stadium.glb'); } catch (e) {}
+// try { useGLTF.preload('/models/stadium.glb'); } catch (e) {}

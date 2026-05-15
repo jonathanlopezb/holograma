@@ -68,7 +68,7 @@ export default function Registration() {
                 className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-accent/10 border border-accent/20 mb-4"
               >
                 <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                <span className="text-[10px] font-black text-accent tracking-[0.4em] uppercase">Penalty Edition</span>
+                <span className="text-[10px] font-black text-accent tracking-[0.4em] uppercase">Penalty Shootout</span>
               </motion.div>
               <h1 className="text-5xl md:text-6xl font-black text-white text-glow tracking-tighter uppercase italic leading-none">
                 {brandingName}
@@ -80,7 +80,7 @@ export default function Registration() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-2 ml-2">
                   <Target className="w-4 h-4 text-accent" />
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Tipo de Misión</label>
+                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Tipo de Competencia</label>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <button 
@@ -102,7 +102,7 @@ export default function Registration() {
                     )}
                   >
                     <Users className={cn("w-6 h-6", mode === 'teams' ? "text-accent" : "text-white/20")} />
-                    <span className="font-black uppercase text-xs tracking-widest">Escuadrón</span>
+                    <span className="font-black uppercase text-xs tracking-widest">Torneo</span>
                     {mode === 'teams' && <motion.div layoutId="mode-bg" className="absolute inset-0 bg-accent/5 -z-10" />}
                   </button>
                 </div>
@@ -113,7 +113,7 @@ export default function Registration() {
                 <div className="flex items-center gap-2 mb-2 ml-2">
                   <Target className="w-4 h-4 text-accent" />
                   <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">
-                    Identificación de Pilotos
+                    Nombres de Jugadores
                   </label>
                 </div>
                 <div className="space-y-3">
@@ -129,7 +129,7 @@ export default function Registration() {
                         type="text" 
                         value={n}
                         onChange={(e) => updateName(i, e.target.value)}
-                        placeholder={mode === 'individual' ? "NOMBRE DEL ATACANTE" : `PILOTO 0${i+1}`}
+                        placeholder={mode === 'individual' ? "NOMBRE DEL JUGADOR" : `JUGADOR 0${i+1}`}
                         className="w-full bg-white/5 border border-white/10 rounded-xl px-8 py-5 text-xl font-black text-white placeholder:text-white/5 focus:outline-none focus:border-accent/50 transition-all uppercase"
                       />
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/10 font-black italic text-sm group-focus-within:text-accent/40 transition-colors">
@@ -144,7 +144,7 @@ export default function Registration() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-2 ml-2">
                   <Shield className="w-4 h-4 text-accent" />
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Nivel de Amenaza</label>
+                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Elige tu Oponente</label>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   {[
@@ -177,10 +177,11 @@ export default function Registration() {
               <div className="absolute inset-0 bg-accent animate-pulse opacity-20 group-hover:opacity-40 transition-opacity" />
               <div className="relative bg-white text-black font-black text-xl py-6 rounded-xl flex items-center justify-center gap-3 transition-colors group-hover:bg-accent group-disabled:bg-white/10 group-disabled:text-white/20">
                 <Trophy className="w-6 h-6" />
-                DESPLEGAR MISIÓN
+                SALTAR A LA CANCHA
               </div>
             </motion.button>
           </div>
+
         </div>
       </motion.div>
     </div>

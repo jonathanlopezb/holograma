@@ -38,41 +38,40 @@ export default function PenaltyArena() {
 
         <Suspense fallback={<Loader />}>
           {/* Atmosphere & Space */}
-          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+          <Stars radius={100} depth={50} count={1500} factor={4} saturation={0} fade speed={1} />
           <Environment preset="night" />
 
           {/* Cinematic Lighting */}
-          <ambientLight intensity={0.2} />
+          <ambientLight intensity={0.4} />
           
           {/* Main Stadium Lights */}
           <spotLight
             position={[-20, 20, 10]}
             angle={0.15}
             penumbra={1}
-            intensity={2}
+            intensity={1.5}
             castShadow
-            shadow-mapSize={[2048, 2048]}
+            shadow-mapSize={[1024, 1024]}
             color="#fff"
           />
           <spotLight
             position={[20, 20, 10]}
             angle={0.15}
             penumbra={1}
-            intensity={2}
+            intensity={1.5}
             castShadow
-            shadow-mapSize={[2048, 2048]}
+            shadow-mapSize={[1024, 1024]}
             color="#fff"
           />
           
           {/* Accent Neon Lights */}
-          <pointLight position={[0, 5, -5]} intensity={1.5} color="#00f2ff" distance={15} />
-          <pointLight position={[-5, 2, 8]} intensity={0.8} color="#ff00f2" distance={10} />
-          <pointLight position={[5, 2, 8]} intensity={0.8} color="#00f2ff" distance={10} />
+          <pointLight position={[0, 5, -5]} intensity={1} color="#00f2ff" distance={15} />
+          <pointLight position={[-5, 2, 8]} intensity={0.5} color="#ff00f2" distance={10} />
+          <pointLight position={[5, 2, 8]} intensity={0.5} color="#00f2ff" distance={10} />
 
           <Physics
             gravity={[0, -9.81, 0]}
             debug={false}
-            timeStep="vary"
           >
             <Stadium />
             <Ball />
@@ -81,34 +80,22 @@ export default function PenaltyArena() {
           </Physics>
 
           <ContactShadows
-            opacity={0.6}
+            opacity={0.4}
             scale={30}
-            blur={2.5}
+            blur={2}
             far={10}
-            resolution={512}
+            resolution={256}
             color="#000000"
           />
 
-          {/* Post-Processing Effects for 'Gamer' Look */}
-          <EffectComposer disableNormalPass>
+          {/* Minimal Post-Processing for stability */}
+          <EffectComposer multisampling={0}>
             <Bloom 
-              intensity={1.2} 
-              luminanceThreshold={0.2} 
-              luminanceSmoothing={0.9} 
-              height={300} 
+              intensity={0.5} 
+              luminanceThreshold={0.8} 
               mipmapBlur
             />
-            <DepthOfField 
-              focusDistance={0.012} 
-              focalLength={0.02} 
-              bokehScale={3} 
-            />
-            <ChromaticAberration 
-              offset={[0.0005, 0.0005]} 
-              blendFunction={BlendFunction.NORMAL} 
-            />
-            <Noise opacity={0.02} />
-            <Vignette eskil={false} offset={0.1} darkness={1.1} />
+            <Vignette offset={0.3} darkness={0.8} />
           </EffectComposer>
 
           {/* Dynamic Camera */}
@@ -118,6 +105,7 @@ export default function PenaltyArena() {
             fov={40} 
           />
         </Suspense>
+
       </Canvas>
     </div>
   );
