@@ -1,21 +1,9 @@
 // @ts-nocheck
 'use client';
 
-export default function Stadium() {
-  return (
-    <group>
-      {/* Pitch Markings (Simple lines) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
-        <planeGeometry args={[100, 100]} />
-        <meshStandardMaterial color="#1a1a1a" />
-      </mesh>
-      
-      {/* Penalty Spot */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 5]}>
-        <circleGeometry args={[0.1, 32]} />
-        <meshStandardMaterial color="white" />
-      </mesh>
+import { useGLTF } from '@react-three/drei';
 
+export default function Stadium() {
       {/* Stands (Stylized boxes) */}
       <mesh position={[0, 10, -50]}>
         <boxGeometry args={[200, 40, 10]} />

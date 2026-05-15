@@ -130,30 +130,6 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
       {/* Torso */}
       <mesh castShadow>
         <capsuleGeometry args={[0.35, 1.0, 8, 16]} />
-        <meshStandardMaterial color={c.jersey} roughness={0.6} metalness={0.1} />
-      </mesh>
-
-      {/* Head */}
-      <mesh position={[0, 0.9, 0]} castShadow>
-        <sphereGeometry args={[0.28, 16, 16]} />
-        <meshStandardMaterial color={c.skin} roughness={0.8} />
-      </mesh>
-
-      {/* Hair (darkish cap) */}
-      <mesh position={[0, 1.1, 0]} castShadow>
-        <sphereGeometry args={[0.29, 16, 8]} />
-        <meshStandardMaterial color={selectedGoalkeeper === 'DIBU' ? '#1a0a00' : '#8B8000'} />
-      </mesh>
-
-      {/* Gloves */}
-      <mesh position={[-0.55, 0.2, 0]} castShadow>
-        <sphereGeometry args={[0.13, 8, 8]} />
-        <meshStandardMaterial color="#f5a623" roughness={0.5} />
-      </mesh>
-      <mesh position={[0.55, 0.2, 0]} castShadow>
-        <sphereGeometry args={[0.13, 8, 8]} />
-        <meshStandardMaterial color="#f5a623" roughness={0.5} />
-      </mesh>
 
       {/* Left Arm */}
       <mesh ref={leftArmRef} position={[-0.5, 0.3, 0]} rotation={[0, 0, 0.3]} castShadow>

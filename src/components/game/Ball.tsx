@@ -32,35 +32,17 @@ export default function Ball() {
     return () => window.removeEventListener('ball-shoot', handleShoot as EventListener);
   }, []);
 
+  // Load realistic ball model
+  // Place 'ball.glb' in public/models/
+  let ballModel;
+  try {
+    ballModel = useGLTF('/models/ball.glb');
+  } catch (e) {
+    ballModel = null;
+  }
+  const { scene } = ballModel || { scene: null };
+
   return (
-    <RigidBody
-      ref={ballRef}
-      colliders={false}
-      restitution={0.65}
-      friction={0.4}
-      linearDamping={0.05}
-      angularDamping={0.1}
-      position={[0, 0.22, 5]}
-      canSleep={false}
-      name="ball"
-    >
-      <BallCollider args={[0.22]} />
-      <mesh castShadow>
-        <sphereGeometry args={[0.22, 32, 32]} />
-        {/* Classic black-white panel ball */}
-        <meshStandardMaterial
-          color="#ffffff"
-          roughness={0.4}
-          metalness={0.05}
-        />
-      </mesh>
-      {/* Black panels overlay (visual only) */}
-      {[0, 1, 2, 3, 4].map((i) => (
-        <mesh
-          key={i}
-          position={[
-            Math.sin((i / 5) * Math.PI * 2) * 0.15,
-            Math.cos((i / 5) * Math.PI * 2) * 0.15,
             0.1,
           ]}
         >
