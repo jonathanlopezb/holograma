@@ -103,11 +103,12 @@ export default function CameraTracker() {
         ctx.drawImage(video, 0, 0, 640, 480);
 
         // Detect objects
-        const predictions = await model.detect(video);
+        const predictions = await model.detect(video) || [];
         
         // Allow sports ball or common misclassifications for colorful beach balls (like frisbee) with low confidence
         const validClasses = ['sports ball', 'frisbee', 'apple', 'orange', 'backpack'];
         const ball = predictions.find(p => validClasses.includes(p.class) && p.score > 0.15);
+
 
         if (isDebug) {
           // Draw zones

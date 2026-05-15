@@ -27,52 +27,43 @@ function Loader() {
 
 export default function PenaltyArena() {
   return (
-    <div className="w-full h-screen bg-[#020202]">
+    <div className="w-full h-screen bg-[#050505]">
       <Canvas
         shadows
-        gl={{ antialias: false, alpha: false, stencil: false, depth: true }}
-        dpr={[1, 1.5]}
+        camera={{ position: [0, 2.5, 12], fov: 40 }}
+        dpr={[1, 2]}
       >
-        <color attach="background" args={['#020202']} />
-        <fog attach="fog" args={['#020202', 15, 35]} />
+        <color attach="background" args={['#050505']} />
+        <fog attach="fog" args={['#050505', 10, 40]} />
 
         <Suspense fallback={<Loader />}>
           {/* Atmosphere & Space */}
-          <Stars radius={100} depth={50} count={1500} factor={4} saturation={0} fade speed={1} />
+          <Stars radius={100} depth={50} count={1000} factor={4} saturation={0} fade speed={1} />
           <Environment preset="night" />
 
-          {/* Cinematic Lighting */}
-          <ambientLight intensity={0.4} />
+          {/* Stadium Lighting */}
+          <ambientLight intensity={0.5} />
           
-          {/* Main Stadium Lights */}
           <spotLight
-            position={[-20, 20, 10]}
-            angle={0.15}
+            position={[-20, 25, 10]}
+            angle={0.2}
             penumbra={1}
-            intensity={1.5}
+            intensity={1}
             castShadow
             shadow-mapSize={[1024, 1024]}
-            color="#fff"
           />
           <spotLight
-            position={[20, 20, 10]}
-            angle={0.15}
+            position={[20, 25, 10]}
+            angle={0.2}
             penumbra={1}
-            intensity={1.5}
+            intensity={1}
             castShadow
             shadow-mapSize={[1024, 1024]}
-            color="#fff"
           />
           
-          {/* Accent Neon Lights */}
-          <pointLight position={[0, 5, -5]} intensity={1} color="#00f2ff" distance={15} />
-          <pointLight position={[-5, 2, 8]} intensity={0.5} color="#ff00f2" distance={10} />
-          <pointLight position={[5, 2, 8]} intensity={0.5} color="#00f2ff" distance={10} />
+          <pointLight position={[0, 5, -5]} intensity={0.5} color="#00f2ff" />
 
-          <Physics
-            gravity={[0, -9.81, 0]}
-            debug={false}
-          >
+          <Physics gravity={[0, -9.81, 0]}>
             <Stadium />
             <Ball />
             <Goal />
@@ -87,27 +78,10 @@ export default function PenaltyArena() {
             resolution={256}
             color="#000000"
           />
-
-          {/* Minimal Post-Processing for stability */}
-          <EffectComposer multisampling={0}>
-            <Bloom 
-              intensity={0.5} 
-              luminanceThreshold={0.8} 
-              mipmapBlur
-            />
-            <Vignette offset={0.3} darkness={0.8} />
-          </EffectComposer>
-
-          {/* Dynamic Camera */}
-          <PerspectiveCamera 
-            makeDefault 
-            position={[0, 2.5, 12]} 
-            fov={40} 
-          />
         </Suspense>
-
       </Canvas>
     </div>
   );
 }
+
 
