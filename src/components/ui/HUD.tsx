@@ -2,9 +2,10 @@
 
 import { useGameStore } from '@/lib/store';
 import { useEffect, useState } from 'react';
+import { X } from 'lucide-react';
 
 export default function HUD() {
-  const { gameState, players, currentPlayerIndex, brandingName, selectedGoalkeeper } = useGameStore();
+  const { gameState, players, currentPlayerIndex, brandingName, selectedGoalkeeper, resetGame } = useGameStore();
   const [camStatus, setCamStatus] = useState('SEARCHING');
 
   useEffect(() => {
@@ -75,6 +76,14 @@ export default function HUD() {
           </span>
         </div>
 
+        {/* Tiny Reset Button */}
+        <button 
+          onClick={resetGame}
+          className="w-8 h-8 rounded-full glass flex items-center justify-center text-white/30 hover:text-white/80 hover:bg-white/10 transition-all ml-auto pointer-events-auto"
+          title="Salir del Juego"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
     </div>
   );
