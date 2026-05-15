@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import { useGameStore } from '@/lib/store';
 import Registration from '@/components/ui/Registration';
 import HUD from '@/components/ui/HUD';
-import ShootControls from '@/components/ui/ShootControls';
 import GoalOverlay from '@/components/ui/GoalOverlay';
 import TournamentResults from '@/components/ui/TournamentResults';
 
@@ -38,9 +37,6 @@ export default function Home() {
 
       {/* HUD overlay — score, branding, status */}
       <HUD />
-
-      {/* Shoot buttons */}
-      <ShootControls />
 
       {/* Cinematic goal / save overlay */}
       <GoalOverlay />

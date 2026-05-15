@@ -104,8 +104,9 @@ export default function CameraTracker() {
         // Detect objects
         const predictions = await model.detect(video);
         
-        // Filter for sports ball
-        const ball = predictions.find(p => p.class === 'sports ball' && p.score > 0.4);
+        // Allow sports ball or common misclassifications for colorful beach balls (like frisbee) with low confidence
+        const validClasses = ['sports ball', 'frisbee', 'apple', 'orange', 'backpack'];
+        const ball = predictions.find(p => validClasses.includes(p.class) && p.score > 0.15);
 
         if (isDebug) {
           // Draw zones
@@ -118,7 +119,7 @@ export default function CameraTracker() {
 
           // Draw predictions
           predictions.forEach(p => {
-            const isBall = p.class === 'sports ball';
+            const isBall = validClasses.includes(p.class);
             ctx.strokeStyle = isBall ? '#00ff00' : '#ff0000';
             ctx.lineWidth = 4;
             ctx.strokeRect(p.bbox[0], p.bbox[1], p.bbox[2], p.bbox[3]);
