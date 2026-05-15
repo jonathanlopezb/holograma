@@ -54,9 +54,16 @@ export default function Ball() {
       ) : (
         <mesh castShadow receiveShadow>
           <sphereGeometry args={[0.22, 32, 32]} />
-          <meshStandardMaterial color="#ffffff" roughness={0.1} />
+          <meshStandardMaterial 
+            color="#ffffff" 
+            roughness={0.15} 
+            metalness={0.8}
+            emissive="#00f2ff"
+            emissiveIntensity={0.2}
+          />
         </mesh>
       )}
+
     </RigidBody>
   );
 }
