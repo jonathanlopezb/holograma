@@ -33,13 +33,9 @@ export default function Ball() {
 
   // Load realistic ball model
   /* 
-  let ballModel;
-  try {
-    ballModel = useGLTF('/models/ball.glb');
-  } catch (e) {
-    ballModel = null;
-  }
+  const ballModel = useGLTF('/models/ball.glb');
   const scene = ballModel?.scene;
+
   */
   const scene = null;
 

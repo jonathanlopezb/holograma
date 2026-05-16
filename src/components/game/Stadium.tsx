@@ -4,13 +4,9 @@
 import { useGLTF } from '@react-three/drei';
 
 export default function Stadium() {
-  let stadiumModel;
-  try {
-    stadiumModel = useGLTF('/models/stadium.glb');
-  } catch (e) {
-    stadiumModel = null;
-  }
+  const stadiumModel = useGLTF('/models/stadium.glb');
   const scene = stadiumModel?.scene;
+
 
 
 

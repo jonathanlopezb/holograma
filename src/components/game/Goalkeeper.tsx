@@ -30,14 +30,11 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
   };
   const c = colors[selectedGoalkeeper];
 
-  // Try to load realistic model
-  let goalkeeperModel;
-  try {
-    goalkeeperModel = useGLTF('/models/goalkeeper.glb');
-  } catch (e) {
-    goalkeeperModel = null;
-  }
+  // Load realistic model
+  const goalkeeperModel = useGLTF('/models/goalkeeper.glb', true); // Use true to prevent throwing if missing? No, drei useGLTF doesn't work like that.
+  // Standard way: Suspense will handle it.
   const { scene, animations } = goalkeeperModel || { scene: null, animations: [] };
+
 
 
   const { actions } = useAnimations(animations, bodyRef);
