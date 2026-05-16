@@ -80,11 +80,10 @@ export default function PenaltyArena() {
             resolution={256}
             color="#000000"
           />
-
-          <ManualControls />
         </Suspense>
-
       </Canvas>
+      <ManualControls />
+
     </div>
   );
 }
