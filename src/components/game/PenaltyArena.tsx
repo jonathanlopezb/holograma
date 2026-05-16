@@ -11,6 +11,8 @@ import Ball from './Ball';
 import Goal from './Goal';
 import Stadium from './Stadium';
 import Goalkeeper from './Goalkeeper';
+import ManualControls from './ManualControls';
+
 
 function Loader() {
   return (
@@ -78,7 +80,10 @@ export default function PenaltyArena() {
             resolution={256}
             color="#000000"
           />
+
+          <ManualControls />
         </Suspense>
+
       </Canvas>
     </div>
   );
