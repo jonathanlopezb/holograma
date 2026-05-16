@@ -15,7 +15,7 @@ interface GoalkeeperProps {
   onGoal?: () => void;
 }
 
-type GKState = 'idle' | 'taunt' | 'dive_left' | 'dive_right' | 'dive_center' | 'celebrate' | 'frustrated';
+type GKState = 'idle' | 'diving' | 'celebrate' | 'frustrated';
 
 export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
   const { gameState } = useGameStore();
@@ -26,58 +26,89 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
   // Load realistic model
   const goalkeeperModel = useGLTF('/models/goalkeeper.glb');
   const { scene, animations } = goalkeeperModel || { scene: null, animations: [] };
+  const clonedScene = useRef(scene?.clone());
 
-  // Apply "Magic" to the model materials
   useEffect(() => {
-    if (scene) {
-      scene.traverse((obj) => {
+    if (scene) clonedScene.current = scene.clone();
+  }, [scene]);
+
+  const { actions } = useAnimations(animations, bodyRef);
+
+  // Apply Professional "Magic" to the model materials and rigging
+  useEffect(() => {
+    if (bodyRef.current) {
+      bodyRef.current.traverse((obj) => {
         if (obj.isMesh) {
           obj.castShadow = true;
           obj.receiveShadow = true;
           if (obj.material) {
-            // Enhance materials for "Gamer" look
-            obj.material.metalness = 0.6;
-            obj.material.roughness = 0.3;
-            if (obj.material.name.toLowerCase().includes('jersey') || obj.material.name.toLowerCase().includes('glow')) {
+            obj.material.metalness = 0.5;
+            obj.material.roughness = 0.4;
+            // Add emissive glow to specific parts if names match
+            if (obj.material.name.toLowerCase().includes('glow') || obj.material.name.toLowerCase().includes('neon')) {
               obj.material.emissive = new THREE.Color('#00f2ff');
-              obj.material.emissiveIntensity = 0.5;
+              obj.material.emissiveIntensity = 1;
             }
           }
         }
       });
     }
-  }, [scene]);
+  }, [clonedScene.current]);
 
-  const { actions } = useAnimations(animations, bodyRef);
-
-
+  /**
+   * Animation Control Logic
+   */
   useEffect(() => {
     if (!actions) return;
+    
+    // Stop all first
+    Object.values(actions).forEach(a => a?.fadeOut(0.2));
+
     if (gkState === 'idle') {
-      actions.idle?.reset().fadeIn(0.5).play();
-    } else if (gkState.startsWith('dive_')) {
-      actions.idle?.fadeOut(0.2);
-      const actionName = gkState;
-      if (actions[actionName]) {
-        actions[actionName].reset().setLoop(THREE.LoopOnce, 1).play();
-        actions[actionName].clampWhenFinished = true;
+      const idleAnim = actions.idle || actions.waiting || actions.reposo || Object.values(actions)[0];
+      idleAnim?.reset().fadeIn(0.5).play();
+    } else if (gkState === 'diving') {
+      // Try to find a dive animation
+      const diveAnim = actions.dive || actions.jump || actions.salto || actions.save;
+      if (diveAnim) {
+        diveAnim.reset().setLoop(THREE.LoopOnce, 1).play();
+        diveAnim.clampWhenFinished = true;
       }
+    } else if (gkState === 'celebrate') {
+      const winAnim = actions.celebrate || actions.win || actions.happy;
+      winAnim?.reset().fadeIn(0.2).play();
+    } else if (gkState === 'frustrated') {
+      const loseAnim = actions.frustrated || actions.sad || actions.lose;
+      loseAnim?.reset().fadeIn(0.2).play();
     }
   }, [gkState, actions]);
 
+  /**
+   * Listen for game events
+   */
   useEffect(() => {
     const handleDive = (e: CustomEvent<{ direction: DiveDirection }>) => {
+      setGkState('diving');
+      
+      // Physical movement logic
       const { direction } = e.detail;
-      const stateMap: Record<DiveDirection, GKState> = {
-        left: 'dive_left',
-        right: 'dive_right',
-        center: 'dive_center',
-      };
-      setGkState(stateMap[direction]);
-      setTimeout(() => setGkState('idle'), 2000);
+      const targetX = direction === 'left' ? -2.5 : direction === 'right' ? 2.5 : 0;
+      
+      // Auto-return to idle
+      setTimeout(() => setGkState('idle'), 2500);
     };
+
+    const handleGKState = (e: CustomEvent<{ state: GKState }>) => {
+      setGkState(e.detail.state);
+      setTimeout(() => setGkState('idle'), 3000);
+    };
+
     window.addEventListener('goalkeeper-dive', handleDive as EventListener);
-    return () => window.removeEventListener('goalkeeper-dive', handleDive as EventListener);
+    window.addEventListener('gk-state', handleGKState as EventListener);
+    return () => {
+      window.removeEventListener('goalkeeper-dive', handleDive as EventListener);
+      window.removeEventListener('gk-state', handleGKState as EventListener);
+    };
   }, []);
 
   useFrame((state) => {
@@ -85,51 +116,36 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
     const t = state.clock.getElapsedTime();
     const body = bodyRef.current;
 
-    // Movement logic for idle / dive
     if (gkState === 'idle') {
-      // Subtle "Gamer" idle sway/mimica
-      body.position.x = Math.sin(t * 1.5) * 0.3;
-      body.position.y = THREE.MathUtils.lerp(body.position.y, Math.abs(Math.sin(t * 2)) * 0.05, 0.1);
-      
-      // Slight rotation sway to look more "alive"
-      body.rotation.y = Math.sin(t * 0.5) * 0.1;
-      body.rotation.z = Math.sin(t * 2) * 0.02;
-    } else if (gkState === 'dive_left') {
-      body.position.x = THREE.MathUtils.lerp(body.position.x, -2.5, 0.18);
-      body.rotation.z = THREE.MathUtils.lerp(body.rotation.z, Math.PI / 2.2, 0.15);
-    } else if (gkState === 'dive_right') {
-      body.position.x = THREE.MathUtils.lerp(body.position.x, 2.5, 0.18);
-      body.rotation.z = THREE.MathUtils.lerp(body.rotation.z, -Math.PI / 2.2, 0.15);
+      // Professional "Mimica" - Breathing and sway
+      body.position.x = Math.sin(t * 1.2) * 0.2;
+      body.position.y = Math.sin(t * 2.5) * 0.02;
+      body.rotation.y = Math.sin(t * 0.5) * 0.05;
     }
   });
-
-  const onContact = () => {
-    if (onSave) onSave();
-  };
 
   return (
     <RigidBody
       ref={rigidbody}
       type="kinematicPosition"
-      position={[0, 0, -4.8]}
+      position={[0, 1, -4.8]}
       colliders={false}
-      onIntersectionEnter={onContact}
+      onIntersectionEnter={() => onSave?.()}
     >
       <group ref={bodyRef}>
-        {scene ? (
-          <primitive object={scene} scale={1.8} position={[0, -1, 0]} rotation={[0, 0, 0]} />
+        {clonedScene.current ? (
+          <primitive object={clonedScene.current} scale={1.8} position={[0, -1, 0]} rotation={[0, 0, 0]} />
         ) : (
-
           <mesh castShadow>
             <capsuleGeometry args={[0.4, 1.2, 4, 16]} />
             <meshStandardMaterial color="#00f2ff" metalness={0.8} roughness={0.2} emissive="#00f2ff" emissiveIntensity={0.5} />
           </mesh>
-
         )}
       </group>
-      <CuboidCollider args={[0.6, 1.2, 0.6]} />
+      <CuboidCollider args={[0.8, 1.2, 0.8]} />
     </RigidBody>
   );
 }
 
 try { useGLTF.preload('/models/goalkeeper.glb'); } catch (e) {}
+
