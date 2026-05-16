@@ -18,26 +18,38 @@ interface GoalkeeperProps {
 type GKState = 'idle' | 'taunt' | 'dive_left' | 'dive_right' | 'dive_center' | 'celebrate' | 'frustrated';
 
 export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
-  const { selectedGoalkeeper, gameState } = useGameStore();
+  const { gameState } = useGameStore();
   const bodyRef = useRef<THREE.Group>(null);
   const rigidbody = useRef<any>(null);
   const [gkState, setGkState] = useState<GKState>('idle');
 
-  // Colors per goalkeeper (fallback)
-  const colors = {
-    DIBU: { jersey: '#4CAF50', shorts: '#fff', skin: '#d4a076' },
-    NEUER: { jersey: '#dc2626', shorts: '#000', skin: '#f0c090' },
-  };
-  const c = colors[selectedGoalkeeper];
-
   // Load realistic model
-  const goalkeeperModel = useGLTF('/models/goalkeeper.glb', true); // Use true to prevent throwing if missing? No, drei useGLTF doesn't work like that.
-  // Standard way: Suspense will handle it.
+  const goalkeeperModel = useGLTF('/models/goalkeeper.glb');
   const { scene, animations } = goalkeeperModel || { scene: null, animations: [] };
 
-
+  // Apply "Magic" to the model materials
+  useEffect(() => {
+    if (scene) {
+      scene.traverse((obj) => {
+        if (obj.isMesh) {
+          obj.castShadow = true;
+          obj.receiveShadow = true;
+          if (obj.material) {
+            // Enhance materials for "Gamer" look
+            obj.material.metalness = 0.6;
+            obj.material.roughness = 0.3;
+            if (obj.material.name.toLowerCase().includes('jersey') || obj.material.name.toLowerCase().includes('glow')) {
+              obj.material.emissive = new THREE.Color('#00f2ff');
+              obj.material.emissiveIntensity = 0.5;
+            }
+          }
+        }
+      });
+    }
+  }, [scene]);
 
   const { actions } = useAnimations(animations, bodyRef);
+
 
   useEffect(() => {
     if (!actions) return;
@@ -105,8 +117,9 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
         ) : (
           <mesh castShadow>
             <capsuleGeometry args={[0.4, 1.2, 4, 16]} />
-            <meshStandardMaterial color={c.jersey} metalness={0.8} roughness={0.2} />
+            <meshStandardMaterial color="#00f2ff" metalness={0.8} roughness={0.2} emissive="#00f2ff" emissiveIntensity={0.5} />
           </mesh>
+
         )}
       </group>
       <CuboidCollider args={[0.6, 1.2, 0.6]} />

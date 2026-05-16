@@ -140,31 +140,7 @@ export default function Registration() {
                 </div>
               </div>
 
-              {/* Goalkeeper Selection */}
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-2 ml-2">
-                  <Shield className="w-4 h-4 text-accent" />
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em]">Elige tu Oponente</label>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    { id: 'DIBU', name: 'EL DIBU', icon: Zap },
-                    { id: 'NEUER', name: 'NEUER', icon: Shield }
-                  ].map((target) => (
-                    <button 
-                      key={target.id}
-                      onClick={() => setGk(target.id as GoalkeeperType)}
-                      className={cn(
-                        "flex items-center justify-center gap-3 p-4 rounded-xl border transition-all",
-                        gk === target.id ? "bg-accent/20 border-accent text-white shadow-[0_0_20px_rgba(0,242,255,0.2)]" : "bg-white/5 border-white/10 text-white/30 hover:bg-white/10"
-                      )}
-                    >
-                      <target.icon className={cn("w-4 h-4", gk === target.id ? "text-accent" : "text-white/20")} />
-                      <span className="font-black text-[10px] uppercase tracking-[0.2em]">{target.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Goalkeeper Selection Removed as per user request */}
             </div>
 
             <motion.button 
@@ -174,6 +150,7 @@ export default function Registration() {
               disabled={!isFormValid}
               className="w-full relative group overflow-hidden"
             >
+
               <div className="absolute inset-0 bg-accent animate-pulse opacity-20 group-hover:opacity-40 transition-opacity" />
               <div className="relative bg-white text-black font-black text-xl py-6 rounded-xl flex items-center justify-center gap-3 transition-colors group-hover:bg-accent group-disabled:bg-white/10 group-disabled:text-white/20">
                 <Trophy className="w-6 h-6" />
