@@ -85,18 +85,21 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
     const t = state.clock.getElapsedTime();
     const body = bodyRef.current;
 
-    // Movement logic for fallback mannequin
-    if (!scene) {
-      if (gkState === 'idle') {
-        body.position.x = Math.sin(t * 1.8) * 0.7;
-        body.position.y = 1 + Math.abs(Math.sin(t * 3.6)) * 0.05;
-      } else if (gkState === 'dive_left') {
-        body.position.x = THREE.MathUtils.lerp(body.position.x, -2.5, 0.18);
-        body.rotation.z = THREE.MathUtils.lerp(body.rotation.z, Math.PI / 2.2, 0.15);
-      } else if (gkState === 'dive_right') {
-        body.position.x = THREE.MathUtils.lerp(body.position.x, 2.5, 0.18);
-        body.rotation.z = THREE.MathUtils.lerp(body.rotation.z, -Math.PI / 2.2, 0.15);
-      }
+    // Movement logic for idle / dive
+    if (gkState === 'idle') {
+      // Subtle "Gamer" idle sway/mimica
+      body.position.x = Math.sin(t * 1.5) * 0.3;
+      body.position.y = THREE.MathUtils.lerp(body.position.y, Math.abs(Math.sin(t * 2)) * 0.05, 0.1);
+      
+      // Slight rotation sway to look more "alive"
+      body.rotation.y = Math.sin(t * 0.5) * 0.1;
+      body.rotation.z = Math.sin(t * 2) * 0.02;
+    } else if (gkState === 'dive_left') {
+      body.position.x = THREE.MathUtils.lerp(body.position.x, -2.5, 0.18);
+      body.rotation.z = THREE.MathUtils.lerp(body.rotation.z, Math.PI / 2.2, 0.15);
+    } else if (gkState === 'dive_right') {
+      body.position.x = THREE.MathUtils.lerp(body.position.x, 2.5, 0.18);
+      body.rotation.z = THREE.MathUtils.lerp(body.rotation.z, -Math.PI / 2.2, 0.15);
     }
   });
 
@@ -108,13 +111,15 @@ export default function Goalkeeper({ onSave, onGoal }: GoalkeeperProps) {
     <RigidBody
       ref={rigidbody}
       type="kinematicPosition"
+      position={[0, 0, -4.8]}
       colliders={false}
       onIntersectionEnter={onContact}
     >
       <group ref={bodyRef}>
         {scene ? (
-          <primitive object={scene} scale={1.8} position={[0, -1, 0]} rotation={[0, Math.PI, 0]} />
+          <primitive object={scene} scale={1.8} position={[0, -1, 0]} rotation={[0, 0, 0]} />
         ) : (
+
           <mesh castShadow>
             <capsuleGeometry args={[0.4, 1.2, 4, 16]} />
             <meshStandardMaterial color="#00f2ff" metalness={0.8} roughness={0.2} emissive="#00f2ff" emissiveIntensity={0.5} />
